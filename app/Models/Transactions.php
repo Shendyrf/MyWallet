@@ -13,6 +13,8 @@ class Transactions extends Model
         'categories_id',
         'amount',
         'transaction_date',
+        'type',
+        'note', 
     ];
     public $timestamps = true;
 
