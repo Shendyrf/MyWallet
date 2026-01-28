@@ -3,15 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Models\Transactions;
+use App\Models\Categories;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $userId = Auth::id();
+        $userId = session('user_id');
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth   = Carbon::now()->endOfMonth();
 
@@ -25,10 +25,26 @@ class DashboardController extends Controller
             ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
             ->sum('amount');
 
+        $balance = $income - $expense;
+
+        $latestTransactions = Transactions::where('user_id', $userId)
+            ->orderBy('transaction_date', 'desc')
+            ->limit(5)
+            ->get();
+
+        $incomeCategories = Categories::where('type', 'income')->get();
+        $expenseCategories = Categories::where('type', 'expense')->get();
+
+        $persentaseBalance = $income == 0 ? 0 : ($expense / $income) * 100;
+
         return view('dashboard', compact(
+            'income',
             'expense',
             'balance',
-            'latestTransactions'
+            'latestTransactions',
+            'incomeCategories',
+            'expenseCategories',
+            'persentaseBalance'
         ));
     }
 }
