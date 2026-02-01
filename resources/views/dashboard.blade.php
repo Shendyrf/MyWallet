@@ -1,4 +1,6 @@
 @extends('layouts.main')
+@include('modal.budgetModal')
+@include('modal.transaction')
 
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
@@ -122,123 +124,120 @@
                 </div>
             </div>
             {{-- end card balance --}}
-        </div>
 
-        {{-- satart modal Income --}}
-        <div class="modal fade" id="incomeModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-            aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content bg-white text-dark">
-
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title fw-semibold">Tambah Pemasukan</h5>
+            {{-- start card budget --}}
+            <div class="col-lg-7">
+                <div class="row">
+                    <div class="col-lg-12 mb-4 order-0">
+                        <div class="card">
+                            <div class="d-flex align-items-end row">
+                                <div class="col-sm-7">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">Budget Overview 🎯</h5>
+                                        <p class="mb-4">Manage your finances effectively with our budgeting tools.</p>
+                                        <button class="btn btn-primary" data-bs-toggle="modal"
+                                            data-bs-target="#budgetModal">
+                                            Create New Budget
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5 text-center text-sm-left">
+                                    <div class="card-body pb-0 px-0 px-md-4">
+                                        <canvas id="budgetPie"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <form action="{{ route('transactions.store') }}" method="POST">
-                        @csrf
-
-                        <input type="hidden" name="type" value="income">
-
-                        <div class="modal-body">
-
-                            <div class="mb-3">
-                                <label class="form-label">Jumlah</label>
-                                <input type="number" name="amount" class="form-control" required>
+                    <div class="col-lg-12 mb-4 order-0">
+                        <div class="card">
+                            <div class="d-flex align-items-end row">
+                                <div class="col-sm-7">
+                                    <div class="card-body">
+                                        <h5 class="card-title text-primary">Budget History</h5>
+                                        <p class="mb-4">View your budget history and track your spending over time.</p>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5 text-center text-sm-left">
+                                    <div class="card-body pb-0 px-0 px-md-4">
+                                    </div>
+                                </div>
                             </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Kategori</label>
-                                <select name="categories_id" class="form-select" required>
-                                    <option selected disabled class="text-muted">Open this select category</option>
-                                    @foreach ($incomeCategories as $category)
-                                        <option value="{{ $category->categories_id }}">
-                                            {{ $category->categories_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" name="transaction_date" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Catatan</label>
-                                <textarea name="note" class="form-control" rows="2"></textarea>
-                            </div>
-
                         </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
-                        </div>
-
-                    </form>
-
+                    </div>
                 </div>
             </div>
-        </div>
-        {{-- end modal Income --}}
-
-        {{-- satart modal expense --}}
-        <div class="modal fade" id="expenseModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-            aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content bg-white text-dark">
-
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title fw-semibold">Tambah Pengeluaran</h5>
+            <div class="col-lg-5">
+                <div class="col-lg-12 mb-4 order-0">
+                    <div class="card">
+                        <div class="d-flex align-items-end row mb-2">
+                            <div class="col-sm-12">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary">Rincian Pengeluaran</h5>
+                                    <p class="mb-0">View your budget history and track your spending over time.</p>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 text-center text-sm-left">
+                                <div class="card-body px-md-4">
+                                    @forelse ($budgetProgress as $item)
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fw-semibold">{{ $item['category'] }}</span>
+                                                <span>{{ $item['percent'] }}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar {{ $item['percent'] >= 90 ? 'bg-danger' : ($item['percent'] >= 70 ? 'bg-warning' : 'bg-success') }}"
+                                                style="width: {{ $item['percent'] }}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mb-1 mb-sm-0 pb-2 text-start">
+                                            Rp {{ number_format($item['spent']) }}
+                                            /
+                                            Rp {{ number_format($item['limit']) }}
+                                        </small>
+                                    @empty
+                                        <p class="text-muted mb-0">No budget data available</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
-                    <form action="{{ route('transactions.store') }}" method="POST">
-                        @csrf
-
-                        <input type="hidden" name="type" value="expense">
-
-                        <div class="modal-body">
-
-                            <div class="mb-3">
-                                <label class="form-label">Jumlah</label>
-                                <input type="number" name="amount" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Kategori</label>
-                                <select name="categories_id" class="form-select" aria-label="Default select example"
-                                    required>
-                                    <option selected disabled class="text-muted">Open this select category</option>
-                                    @foreach ($expenseCategories as $category)
-                                        <option value="{{ $category->categories_id }}">
-                                            {{ $category->categories_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" name="transaction_date" class="form-control" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Catatan</label>
-                                <textarea name="note" class="form-control" rows="2"></textarea>
-                            </div>
-
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary">Simpan</button>
-                        </div>
-
-                    </form>
-
                 </div>
             </div>
+            {{-- end card budget --}}
         </div>
-        {{-- end modal expense --}}
     </div>
+@endsection
+@section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('budgetPie');
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!window.budgetChartData) return;
+
+            const ctx = document.getElementById('budgetPie');
+            if (!ctx) return;
+
+            const data = window.budgetChartData;
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: data.map(i => i.category),
+                    datasets: [{
+                        data: data.map(i => i.amount),
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        });
+    </script>
 @endsection

@@ -9,7 +9,7 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(BudgetsController $budgetsController)
     {
         $userId = session('user_id');
         $startOfMonth = Carbon::now()->startOfMonth();
@@ -37,14 +37,17 @@ class DashboardController extends Controller
 
         $persentaseBalance = $income == 0 ? 0 : ($expense / $income) * 100;
 
-        return view('dashboard', compact(
+        return view('dashboard', array_merge(compact(
             'income',
             'expense',
             'balance',
             'latestTransactions',
             'incomeCategories',
             'expenseCategories',
-            'persentaseBalance'
-        ));
+            'persentaseBalance',
+        ), [
+            'budgetProgress' => $budgetsController->budgetProgress(),
+            'budgetChartData' => $budgetsController->showBudgetChartData(),
+        ]));
     }
 }
