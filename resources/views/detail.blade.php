@@ -1,4 +1,5 @@
 @extends('layouts.main')
+{{-- @include('modal.catergoryModal') --}}
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row">
@@ -6,7 +7,6 @@
                 <div class="card">
                     <div class="card-header justify-content-between d-flex align-items-center">
                         <h5 class="mb-0">Categories List</h5>
-                        <button class="btn btn-primary btn-sm float-end">Add New Category</button>
                     </div>
                     <div class="table-responsive text-nowrap">
                         <table class="table">
@@ -15,6 +15,7 @@
                                     <th>No</th>
                                     <th>Category Name</th>
                                     <th>Type</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody class="table-border-bottom-0">
@@ -23,6 +24,16 @@
                                         <td>{{ $index + 1 }}</td>
                                         <td>{{ $category->categories_name }}</td>
                                         <td>{{ $category->type }}</td>
+                                        <td>
+                                            <form action="{{ route('categories.destroy', $category->categories_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm me-1">
+                                                    <i class="bx bx-delete"></i>
+                                                    <span>Delete</span>
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                 @endforeach
                             </tbody>

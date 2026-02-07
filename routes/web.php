@@ -20,6 +20,8 @@ Route::middleware([CheckSession::class])->group(function () {
     Route::post('/budget-store', [BudgetsController::class, 'store'])->name('budgets.store');
 
     Route::get('/detail', [CategoriesController::class, 'index'])->name('categories.index');
+    Route::post('/category-store', [CategoriesController::class, 'store'])->name('categories.store');
+    Route::delete('/category-delete/{categories}', [CategoriesController::class, 'destroy'])->name('categories.destroy');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

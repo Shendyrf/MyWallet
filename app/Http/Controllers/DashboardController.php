@@ -12,6 +12,7 @@ class DashboardController extends Controller
     public function index(BudgetsController $budgetsController)
     {
         $userId = session('user_id');
+        $today = Carbon::now();
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth   = Carbon::now()->endOfMonth();
 
@@ -27,10 +28,10 @@ class DashboardController extends Controller
 
         $balance = $income - $expense;
 
-        $latestTransactions = Transactions::where('user_id', $userId)
-            ->orderBy('transaction_date', 'desc')
-            ->limit(5)
-            ->get();
+        // $latestTransactions = Transactions::where('user_id', $userId)
+        //     ->orderBy('transaction_date', 'desc')
+        //     ->limit(5)
+        //     ->get();
 
         $incomeCategories = Categories::where('type', 'income')->get();
         $expenseCategories = Categories::where('type', 'expense')->get();
@@ -41,7 +42,7 @@ class DashboardController extends Controller
             'income',
             'expense',
             'balance',
-            'latestTransactions',
+            // 'latestTransactions',
             'incomeCategories',
             'expenseCategories',
             'persentaseBalance',
