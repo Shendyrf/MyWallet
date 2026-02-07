@@ -12,7 +12,10 @@ class CategoriesController extends Controller
      */
     public function index()
     {
-        $categories = Categories::all();
+        $categories = Categories::query()
+        ->orderBy('type' , 'asc')
+        ->orderBy('categories_name', 'asc')
+        ->get();
         return view('detail', compact('categories'));
     }
 
@@ -29,7 +32,12 @@ class CategoriesController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $categories = new Categories();
+        $categories->categories_name = $request->input('categories_name');
+        $categories->type = $request->input('type');
+        $categories->save();
+
+        return redirect()->back()->with('success', 'Category added successfully!');
     }
 
     /**
@@ -61,6 +69,8 @@ class CategoriesController extends Controller
      */
     public function destroy(Categories $categories)
     {
-        //
+        $categories->delete();
+
+        return redirect()->back()->with('success', 'Category deleted successfully!');
     }
 }

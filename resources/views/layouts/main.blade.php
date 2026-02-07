@@ -60,14 +60,14 @@
                 <div class="menu-inner-shadow"></div>
 
                 <ul class="menu-inner py-1">
-                    <li class="menu-item active">
+                    <li class="menu-item {{ request()->routeIs('dashboard') ? 'active open' : '' }}">
                         <a href="{{ url('/') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-home-circle"></i>
                             <div data-i18n="Analytics">Dashboard</div>
                         </a>
                     </li>
 
-                    <li class="menu-item active">
+                    <li class="menu-item {{ request()->routeIs('categories.index') ? 'active open' : '' }}">
                         <a href="{{ url('/detail') }}" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-wallet"></i>
                             <div data-i18n="Analytics">Detail</div>
@@ -117,6 +117,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous">
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="{{ asset('assets/vendor/libs/jquery/jquery.js') }}"></script>
     <script src="{{ asset('assets/vendor/libs/popper/popper.js') }}"></script>
     <script src="{{ asset('assets/vendor/js/bootstrap.js') }}"></script>
@@ -129,5 +130,6 @@
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>
+@yield('scripts')
 
 </html>

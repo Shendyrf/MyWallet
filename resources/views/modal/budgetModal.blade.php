@@ -13,14 +13,21 @@
 
                     <div class="mb-3">
                         <label class="form-label">Category</label>
-                        <select name="categories_id" class="form-select" required>
+                        <select name="categories_id" id="categoriesSelect" class="form-select" required>
                             <option value="">-- Select Category --</option>
                             @foreach ($expenseCategories as $category)
                                 <option value="{{ $category->categories_id }}">
                                     {{ $category->categories_name }}
                                 </option>
                             @endforeach
+                            <option value="other">other</option>
                         </select>
+                    </div>
+
+                    <div class="mb-3 d-none" id="customCategoryWrapper">
+                        <label class="form-label">New Category Name</label>
+                        <input type="text" name="custom_category" class="form-control"
+                            placeholder="Enter new category name">
                     </div>
 
                     <div class="mb-3">
@@ -31,6 +38,7 @@
                     <div class="mb-3">
                         <label class="form-label">Period</label>
                         <select name="period" class="form-select" required>
+                            <option value="" disabled selected>Select Period</option>
                             <option value="monthly">Monthly</option>
                             <option value="yearly">Yearly</option>
                         </select>

@@ -174,25 +174,77 @@
                             <div class="col-sm-12">
                                 <div class="card-body">
                                     <h5 class="card-title text-primary">Rincian Pengeluaran</h5>
-                                    <p class="mb-0">View your budget history and track your spending over time.</p>
+                                    <p>View your budget history and track your spending over time.</p>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            onclick="showSection('Daily')">Daily</button>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            onclick="showSection('Weekly')">Weekly</button>
+                                        <button class="btn btn-sm btn-outline-primary"
+                                            onclick="showSection('Monthly')">Monthly</button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-sm-12 text-center text-sm-left">
-                                <div class="card-body px-md-4">
+                                <div class="card-body px-md-4" id="budgetDetailsDaily">
                                     @forelse ($budgetProgress as $item)
                                         <div class="mb-2">
                                             <div class="d-flex justify-content-between">
                                                 <span class="fw-semibold">{{ $item['category'] }}</span>
-                                                <span>{{ $item['percent'] }}%</span>
+                                                <span>{{ $item['percentDaily'] }}%</span>
                                             </div>
                                         </div>
                                         <div class="progress" style="height: 8px;">
-                                            <div class="progress-bar {{ $item['percent'] >= 90 ? 'bg-danger' : ($item['percent'] >= 70 ? 'bg-warning' : 'bg-success') }}"
-                                                style="width: {{ $item['percent'] }}%">
+                                            <div class="progress-bar {{ $item['percentDaily'] >= 90 ? 'bg-danger' : ($item['percentDaily'] >= 70 ? 'bg-warning' : 'bg-success') }}"
+                                                style="width: {{ $item['percentDaily'] }}%">
                                             </div>
                                         </div>
                                         <small class="text-muted d-block mb-1 mb-sm-0 pb-2 text-start">
-                                            Rp {{ number_format($item['spent']) }}
+                                            Rp {{ number_format($item['spentDaily']) }}
+                                            /
+                                            Rp {{ number_format($item['limit']) }}
+                                        </small>
+                                    @empty
+                                        <p class="text-muted mb-0">No budget data available</p>
+                                    @endforelse
+                                </div>
+                                <div class="card-body px-md-4" id="budgetDetailsWeekly">
+                                    @forelse ($budgetProgress as $item)
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fw-semibold">{{ $item['category'] }}</span>
+                                                <span>{{ $item['percentWeekly'] }}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar {{ $item['percentWeekly'] >= 90 ? 'bg-danger' : ($item['percentWeekly'] >= 70 ? 'bg-warning' : 'bg-success') }}"
+                                                style="width: {{ $item['percentWeekly'] }}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mb-1 mb-sm-0 pb-2 text-start">
+                                            Rp {{ number_format($item['spentWeekly']) }}
+                                            /
+                                            Rp {{ number_format($item['limit']) }}
+                                        </small>
+                                    @empty
+                                        <p class="text-muted mb-0">No budget data available</p>
+                                    @endforelse
+                                </div>
+                                <div class="card-body px-md-4" id="budgetDetailsMonthly">
+                                    @forelse ($budgetProgress as $item)
+                                        <div class="mb-2">
+                                            <div class="d-flex justify-content-between">
+                                                <span class="fw-semibold">{{ $item['category'] }}</span>
+                                                <span>{{ $item['percentMonthly'] }}%</span>
+                                            </div>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar {{ $item['percentMonthly'] >= 90 ? 'bg-danger' : ($item['percentMonthly'] >= 70 ? 'bg-warning' : 'bg-success') }}"
+                                                style="width: {{ $item['percentMonthly'] }}%">
+                                            </div>
+                                        </div>
+                                        <small class="text-muted d-block mb-1 mb-sm-0 pb-2 text-start">
+                                            Rp {{ number_format($item['spentMonthly']) }}
                                             /
                                             Rp {{ number_format($item['limit']) }}
                                         </small>
@@ -210,34 +262,55 @@
     </div>
 @endsection
 @section('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('budgetPie');
+        function showSection(type) {
+            const sections = ['Daily', 'Weekly', 'Monthly'];
+
+            sections.forEach(section => {
+                document.getElementById('budgetDetails' + section).style.display =
+                    section === type ? 'block' : 'none';
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            if (!window.budgetChartData) return;
+            showSection('Daily');
+        });
 
-            const ctx = document.getElementById('budgetPie');
-            if (!ctx) return;
+        const categorySelect = document.getElementById('categoriesSelect');
+        const customCategoryWrapper = document.getElementById('customCategoryWrapper');
 
-            const data = window.budgetChartData;
+        categorySelect.addEventListener('change', function() {
+            if (this.value === 'other') {
+                customCategoryWrapper.classList.remove('d-none');
+            } else {
+                customCategoryWrapper.classList.add('d-none');
+            }
+        });
 
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: data.map(i => i.category),
-                    datasets: [{
-                        data: data.map(i => i.amount),
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
+        const rawData = @json($budgetChartData);
+
+        const labels = rawData.map(item => item.category);
+        const values = rawData.map(item => item.amount);
+
+        const ctx = document.getElementById('budgetPie').getContext('2d');
+
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
                     }
                 }
-            });
+            }
         });
     </script>
 @endsection

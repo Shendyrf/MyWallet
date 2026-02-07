@@ -13,26 +13,47 @@ class BudgetsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'categories_id' => 'required|exists:categories,categories_id',
-            'amount_limit'  => 'required|numeric|min:1',
-            'period'        => 'required|in:monthly,yearly',
-            'start_date'    => 'required|date',
-            'end_date'      => 'required|date|after:start_date',
+            'categories_id' => 'required',
+            'amount_limit' => 'required|numeric',
+            'period' => 'required|in:monthly,yearly',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+            'custom_category' => 'nullable|string|max:100'
         ]);
+
+        // default category id
+        $categoryId = $request->categories_id;
+
+        // kalau user pilih "Others"
+        if ($request->categories_id === 'other') {
+
+            if (!$request->custom_category) {
+                return back()->withErrors([
+                    'custom_category' => 'Please enter category name'
+                ]);
+            }
+
+            // buat category baru
+            $category = Categories::create([
+                'categories_name' => $request->custom_category,
+                'type' => 'expense',
+            ]);
+
+            $categoryId = $category->categories_id;
+        }
 
         Budgets::create([
-            'user_id'       => session('user_id'),
-            'categories_id' => $request->categories_id,
-            'amount_limit'  => $request->amount_limit,
-            'period'        => $request->period,
-            'start_date'    => $request->start_date,
-            'end_date'      => $request->end_date,
+            'user_id' => session('user_id'),
+            'categories_id' => $categoryId,
+            'amount_limit' => $request->amount_limit,
+            'period' => $request->period,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
         ]);
 
-        return redirect()
-            ->back()
-            ->with('success', 'Budget successfully created');
+        return back()->with('success', 'Budget created successfully');
     }
+
 
     /**
      * Display the specified resource.
@@ -41,28 +62,53 @@ class BudgetsController extends Controller
     {
         $userId = session('user_id');
 
-
         $budgets = Budgets::join('categories', 'budgets.categories_id', '=', 'categories.categories_id')
             ->where('budgets.user_id', $userId)
+            ->whereIn('budgets.period', ['monthly', 'daily', 'yearly'])
             ->select('budgets.*', 'categories.categories_name')
             ->get()
             ->map(function ($budget) use ($userId) {
+                $today = Carbon::now();
+                $startOfWeek = Carbon::now()->startOfWeek();
+                $endOfWeek   = Carbon::now()->endOfWeek();
                 $startOfMonth = Carbon::now()->startOfMonth();
                 $endOfMonth   = Carbon::now()->endOfMonth();
-                $spent = Transactions::where('user_id', $userId)
+                $spentMonthly = Transactions::where('user_id', $userId)
                     ->where('categories_id', $budget->categories_id)
                     ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
                     ->sum('amount');
 
-                $percent = $budget->amount_limit > 0
-                    ? min(100, round(($spent / $budget->amount_limit) * 100))
+                $spentWeekly = Transactions::where('user_id', $userId)
+                    ->where('categories_id', $budget->categories_id)
+                    ->whereBetween('transaction_date', [$startOfWeek, $endOfWeek])
+                    ->sum('amount');
+
+                $spentDaily = Transactions::where('user_id', $userId)
+                    ->where('categories_id', $budget->categories_id)
+                    ->whereDate('transaction_date', $today)
+                    ->sum('amount');
+
+                $percentMonthly = $budget->amount_limit > 0
+                    ? min(100, round(($spentMonthly / $budget->amount_limit) * 100))
+                    : 0;
+
+                $percentWeekly = $budget->amount_limit > 0
+                    ? min(100, round(($spentWeekly / $budget->amount_limit) * 100))
+                    : 0;
+
+                $percentDaily = $budget->amount_limit > 0
+                    ? min(100, round(($spentDaily / $budget->amount_limit) * 100))
                     : 0;
 
                 return [
                     'category' => $budget->categories_name,
                     'limit'    => $budget->amount_limit,
-                    'spent'    => $spent,
-                    'percent'  => $percent,
+                    'spentMonthly'    => $spentMonthly,
+                    'spentDaily' => $spentDaily,
+                    'spentWeekly' => $spentWeekly,
+                    'percentMonthly' => $percentMonthly,
+                    'percentWeekly' => $percentWeekly,
+                    'percentDaily' => $percentDaily,
                 ];
             });
 
@@ -72,19 +118,12 @@ class BudgetsController extends Controller
     public function showBudgetChartData()
     {
         $userId = session('user_id');
-        $data = Budgets::join('categories', 'budgets.categories_id', '=', 'categories.categories_id')
-            ->where('budgets.user_id', $userId)
-            ->select('categories.categories_name', 'budgets.amount_limit')
-            ->get()
-            ->groupBy('categories_id')
-            ->map(function ($items) {
-                return [
-                    'category' => $items->first()->categories_name,
-                    'amount'   => $items->sum('amount_limit'),
-                ];
-            })
-            ->values();
 
-        return $data;
+        return Budgets::join('categories', 'budgets.categories_id', '=', 'categories.categories_id')
+            ->where('budgets.user_id', $userId)
+            // ->where('budgets.period', 'monthly')
+            ->groupBy('categories.categories_id', 'categories.categories_name')
+            ->selectRaw('categories.categories_name as category, SUM(budgets.amount_limit) as amount')
+            ->get();
     }
 }
