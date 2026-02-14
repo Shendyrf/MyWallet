@@ -127,6 +127,7 @@
     <script src="{{ asset('assets/js/main.js') }}"></script>
 
     <script src="{{ asset('assets/js/dashboards-analytics.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script async defer src="https://buttons.github.io/buttons.js"></script>
 </body>

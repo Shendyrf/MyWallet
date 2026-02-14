@@ -25,7 +25,8 @@
                                         <td>{{ $category->categories_name }}</td>
                                         <td>{{ $category->type }}</td>
                                         <td>
-                                            <form action="{{ route('categories.destroy', $category->categories_id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('categories.destroy', $category->categories_id) }}"
+                                                method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-danger btn-sm me-1">
@@ -56,55 +57,25 @@
                                 </tr>
                             </thead>
                             <tbody class="table-border-bottom-0">
-                                <tr>
-                                    <td>1</td>
-                                    <td>January</td>
-                                    <td>Rp 3.000.000</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>February</td>
-                                    <td>Rp 2.500.000</td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>March</td>
-                                    <td>Rp 4.200.000</td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td>April</td>
-                                    <td>Rp 3.800.000</td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td>May</td>
-                                    <td>Rp 4.500.000</td>
-                                </tr>
-                                <tr>
-                                    <td>6</td>
-                                    <td>June</td>
-                                    <td>Rp 3.900.000</td>
-                                </tr>
-                                <tr>
-                                    <td>7</td>
-                                    <td>July</td>
-                                    <td>Rp 4.200.000</td>
-                                </tr>
-                                <tr>
-                                    <td>8</td>
-                                    <td>August</td>
-                                    <td>Rp 3.700.000</td>
-                                </tr>
+                                @foreach ($budgetSummary as $budget)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>
+                                            {{ \Carbon\Carbon::create()->month($budget->month)->translatedFormat('F') }}
+                                        </td>
+                                        <td>Rp {{ number_format($budget->total, 0, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-            <div class="col-lg-12 mt-4">
+            <div class="col-lg-12 mt-4" id="transactionDetail">
                 <div class="card">
-                    <div class="card-header">
-                        <h5 class="mb-0">Transaction Summary</h5>
+                    <div class="card-header justify-content-between d-flex align-items-center">
+                        <h5 class="mb-0">Transaction Detail</h5>
+                        <a class="text-muted float-end">Total Transactions: Rp {{ number_format($totalTransactions, 0, ',', '.') }}</a>
                     </div>
                     <div class="table-responsive text-nowrap">
                         <table class="table">
@@ -118,34 +89,15 @@
                                 </tr>
                             </thead>
                             <tbody class="table-border-bottom-0">
-                                <tr>
-                                    <td>1</td>
-                                    <td>Food & Drink</td>
-                                    <td>Rp 150.000</td>
-                                    <td>2026-01-05</td>
-                                    <td>Lunch with friends</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td>Transportation</td>
-                                    <td>Rp 75.000</td>
-                                    <td>2026-01-06</td>
-                                    <td>Online ride</td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td>Entertainment</td>
-                                    <td>Rp 300.000</td>
-                                    <td>2026-01-08</td>
-                                    <td>Movie & snacks</td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td>Utilities</td>
-                                    <td>Rp 500.000</td>
-                                    <td>2026-01-10</td>
-                                    <td>Electricity bill</td>
-                                </tr>
+                                @foreach ($transactionDetails as $transaction)
+                                    <tr>
+                                        <td>{{ $loop->iteration }}</td>
+                                        <td>{{ $transaction->categories_name }}</td>
+                                        <td>Rp {{ number_format($transaction->total, 0, ',', '.') }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($transaction->transaction_date)->translatedFormat('d F Y') }}</td>
+                                        <td>{{ $transaction->note }}</td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>

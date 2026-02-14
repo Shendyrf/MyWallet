@@ -117,7 +117,7 @@
                         <p class="card-text text-muted">
                             Ringkasan saldo keuanganmu berdasarkan pemasukan dan pengeluaran terbaru.
                         </p>
-                        <a href="#" class="btn btn-success w-100">
+                        <a href="/detail#transactionDetail" class="btn btn-success w-100">
                             <i class="bx bx-show me-1"></i> Lihat Detail
                         </a>
                     </div>
@@ -149,19 +149,42 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-12 mb-4 order-0">
+                    <div class="col-12 mb-4">
                         <div class="card">
-                            <div class="d-flex align-items-end row">
-                                <div class="col-sm-7">
-                                    <div class="card-body">
-                                        <h5 class="card-title text-primary">Budget History</h5>
-                                        <p class="mb-4">View your budget history and track your spending over time.</p>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">Laporan Keuangan</h5>
+                                    <small class="text-muted">Ringkasan Tahunan</small>
+                                </div>
+
+                                <ul class="nav nav-pills" role="tablist">
+                                    <li class="nav-item">
+                                        <button type="button" class="nav-link active"
+                                            onclick="updateChart('income')">Income</button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button type="button" class="nav-link"
+                                            onclick="updateChart('expense')">Expenses</button>
+                                    </li>
+                                    <li class="nav-item">
+                                        <button type="button" class="nav-link"
+                                            onclick="updateChart('profit')">Profit</button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="avatar p-2 me-2 bg-label-primary rounded">
+                                        <i class="bx bx-wallet fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <span class="d-block text-muted">Total Balance Tahun Ini</span>
+                                        <h4 class="mb-0">Rp {{ number_format($totalBalance, 0, ',', '.') }}</h4>
                                     </div>
                                 </div>
-                                <div class="col-sm-5 text-center text-sm-left">
-                                    <div class="card-body pb-0 px-0 px-md-4">
-                                    </div>
-                                </div>
+
+                                <div id="financeChart"></div>
                             </div>
                         </div>
                     </div>
@@ -310,6 +333,110 @@
                         position: 'bottom'
                     }
                 }
+            }
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Ambil data dari Controller
+            var dataIncome = {!! json_encode($chartIncome) !!};
+            var dataExpense = {!! json_encode($chartExpense) !!};
+            var dataProfit = {!! json_encode($chartProfit) !!};
+
+            // Konfigurasi Chart (Mirip referensi gambar)
+            var options = {
+                series: [{
+                    name: 'Nominal',
+                    data: dataIncome // Default tampilkan Income dulu
+                }],
+                chart: {
+                    height: 300,
+                    type: 'area', // Tipe Area supaya ada arsir warna di bawah garis
+                    toolbar: {
+                        show: false
+                    } // Hilangkan menu download di pojok
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    curve: 'smooth', // Bikin garis melengkung
+                    width: 2
+                },
+                colors: ['#696cff'], // Warna Ungu Utama Sneat
+                fill: {
+                    type: 'gradient', // Efek gradasi pudar ke bawah
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.7,
+                        opacityTo: 0.1, // Bagian bawah transparan
+                        stops: [0, 90, 100]
+                    }
+                },
+                xaxis: {
+                    categories: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov',
+                        'Des'
+                    ],
+                    axisBorder: {
+                        show: false
+                    },
+                    axisTicks: {
+                        show: false
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: function(value) {
+                            // Format angka jadi K (Ribuan) atau Jt (Juta) biar rapi
+                            if (value >= 1000000) return (value / 1000000).toFixed(1) + "Jt";
+                            if (value >= 1000) return (value / 1000).toFixed(0) + "Rb";
+                            return value;
+                        }
+                    }
+                },
+                grid: {
+                    borderColor: '#eceef1',
+                    strokeDashArray: 4, // Garis putus-putus di background
+                    xaxis: {
+                        lines: {
+                            show: false
+                        }
+                    }
+                }
+            };
+
+            // Render Chart
+            var chart = new ApexCharts(document.querySelector("#financeChart"), options);
+            chart.render();
+
+            // --- Logic Tombol Ganti Data (Income/Expense/Profit) ---
+            window.updateChart = function(type) {
+                var newData = [];
+                var newColor = '';
+
+                if (type === 'income') {
+                    newData = dataIncome;
+                    newColor = '#696cff'; // Ungu
+                } else if (type === 'expense') {
+                    newData = dataExpense;
+                    newColor = '#ff3e1d'; // Merah
+                } else {
+                    newData = dataProfit;
+                    newColor = '#71dd37'; // Hijau
+                }
+
+                // Update Chart tanpa refresh halaman
+                chart.updateOptions({
+                    colors: [newColor],
+                    series: [{
+                        data: newData
+                    }]
+                });
+
+                // Logic ganti class 'active' di tombol (Pemanis UI)
+                var buttons = document.querySelectorAll('.nav-link');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
             }
         });
     </script>
