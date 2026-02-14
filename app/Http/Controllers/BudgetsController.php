@@ -54,25 +54,22 @@ class BudgetsController extends Controller
         return back()->with('success', 'Budget created successfully');
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function budgetProgress()
     {
         $userId = session('user_id');
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth   = Carbon::now()->endOfMonth();
 
         $budgets = Budgets::join('categories', 'budgets.categories_id', '=', 'categories.categories_id')
             ->where('budgets.user_id', $userId)
             ->whereIn('budgets.period', ['monthly', 'daily', 'yearly'])
+            ->whereBetween('start_date', [$startOfMonth, $endOfMonth])
             ->select('budgets.*', 'categories.categories_name')
             ->get()
-            ->map(function ($budget) use ($userId) {
+            ->map(function ($budget) use ($userId , $startOfMonth, $endOfMonth) {
                 $today = Carbon::now();
                 $startOfWeek = Carbon::now()->startOfWeek();
                 $endOfWeek   = Carbon::now()->endOfWeek();
-                $startOfMonth = Carbon::now()->startOfMonth();
-                $endOfMonth   = Carbon::now()->endOfMonth();
                 $spentMonthly = Transactions::where('user_id', $userId)
                     ->where('categories_id', $budget->categories_id)
                     ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
@@ -119,11 +116,25 @@ class BudgetsController extends Controller
     {
         $userId = session('user_id');
 
+        $startOfMonth = Carbon::now()->startOfMonth();
+        $endOfMonth   = Carbon::now()->endOfMonth();
+
         return Budgets::join('categories', 'budgets.categories_id', '=', 'categories.categories_id')
             ->where('budgets.user_id', $userId)
+            ->whereBetween('budgets.start_date', [$startOfMonth, $endOfMonth])
             // ->where('budgets.period', 'monthly')
-            ->groupBy('categories.categories_id', 'categories.categories_name')
-            ->selectRaw('categories.categories_name as category, SUM(budgets.amount_limit) as amount')
+            ->groupBy('categories.categories_id', 'categories.categories_name', 'budgets.start_date')
+            ->selectRaw('categories.categories_name as category, SUM(budgets.amount_limit) as amount, budgets.start_date')
+            ->get();
+    }
+
+    public function showBudgetSummary()
+    {
+        return Budgets::where('user_id', session('user_id'))
+            ->where('period', 'monthly')
+            ->selectRaw('MONTH(start_date) as month, SUM(amount_limit) as total')
+            ->groupByRaw('MONTH(start_date)')
+            ->orderBy('month')
             ->get();
     }
 }

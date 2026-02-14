@@ -8,19 +8,6 @@ use Illuminate\Support\Carbon;
 
 class TransactionsController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index() {}
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create() {}
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         // dd($request->all());
@@ -46,36 +33,13 @@ class TransactionsController extends Controller
         return redirect()->back()->with('success', 'Transaksi berhasil ditambahkan');
     }
 
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Transactions $transactions)
+    public function transactionDetails()
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Transactions $transactions)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Transactions $transactions)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Transactions $transactions)
-    {
-        //
+        return Transactions::join('categories', 'transactions.categories_id', '=', 'categories.categories_id')
+            ->where('user_id', session('user_id'))
+            ->selectRaw('transactions.categories_id, categories.categories_name, transactions.transaction_date, SUM(amount) as total, transactions.note')
+            ->groupBy('transactions.categories_id', 'categories.categories_name', 'transactions.transaction_date', 'transactions.note')
+            ->orderBy('transactions.transaction_date', 'desc')
+            ->get();
     }
 }

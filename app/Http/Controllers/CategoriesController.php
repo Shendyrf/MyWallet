@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categories;
+use App\Models\Transactions;
 use Illuminate\Http\Request;
 
 class CategoriesController extends Controller
@@ -10,13 +11,23 @@ class CategoriesController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(BudgetsController $budgetsController, TransactionsController $transactionsController)
     {
         $categories = Categories::query()
-        ->orderBy('type' , 'asc')
-        ->orderBy('categories_name', 'asc')
-        ->get();
-        return view('detail', compact('categories'));
+            ->orderBy('type', 'asc')
+            ->orderBy('categories_name', 'asc')
+            ->get();
+
+        $totalTransactions = Transactions::where('user_id', session('user_id'))->sum('amount');
+
+        return view('detail', array_merge(
+            compact(
+                'categories',
+                'totalTransactions'
+            ),
+            ['budgetSummary' => $budgetsController->showBudgetSummary()],
+            ['transactionDetails' => $transactionsController->transactionDetails()]
+        ));
     }
 
     /**
